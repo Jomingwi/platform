@@ -8,6 +8,7 @@ public class MoveController : MonoBehaviour
     [Header("플레이어 이동 및 점프")]
     Rigidbody2D rigid;
     CapsuleCollider2D coll;
+    BoxCollider2D boxColl;
     Animator anim;
     Vector3 moveDir;
     float verticalVelocity = 0f; //수직으로 떨어지는 힘
@@ -20,6 +21,8 @@ public class MoveController : MonoBehaviour
     [SerializeField] Color colorGroundCheck;
     [SerializeField] bool isGround; //인스펙터에서 플레이어가 플랫폼 타일에 착지 했는지 체크
     bool isJump;
+
+    Camera camMain;
 
     private void OnDrawGizmos()
     {
@@ -35,12 +38,13 @@ public class MoveController : MonoBehaviour
     private void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
+        boxColl = GetComponent<BoxCollider2D>();
         anim = GetComponent<Animator>();
     }
 
     void Start()
     {
-
+        camMain = Camera.main;
     }
 
 
@@ -49,6 +53,7 @@ public class MoveController : MonoBehaviour
         checkGrounded();
 
         moving();
+        checkAim();
         jump();
 
         checkGravity();
@@ -65,10 +70,14 @@ public class MoveController : MonoBehaviour
         //Layer = int로 대상의 레이어를 구분
         //Layer의 int와 공통적으로 활용하는  int 와 다름
         //Wall Layer , Ground Layer
-        RaycastHit2D hit = 
-        Physics2D.Raycast(transform.position, Vector2.down, grondCheckLength, LayerMask.GetMask("Ground"));
-        
-        if(hit)
+        //RaycastHit2D hit = 
+        //Physics2D.Raycast(transform.position, Vector2.down, grondCheckLength, LayerMask.GetMask("Ground"));
+
+
+        RaycastHit2D hit =
+        Physics2D.BoxCast(boxColl.bounds.center, boxColl.bounds.size, 0f, Vector2.down , grondCheckLength, LayerMask.GetMask("Ground"));
+
+        if (hit)
         {
             isGround = true;
         }
@@ -83,6 +92,42 @@ public class MoveController : MonoBehaviour
         rigid.velocity = moveDir;
         
     }
+
+ 
+    /// <summary>
+    /// transform.localPosition; 부모로부터의 자식 포지션
+    ///transform.position; 월드 포지션
+    /// </summary>
+    private void checkAim()
+    {
+        //Vector3 scale = transform.localScale;
+        //if (moveDir.x < 0 && scale.x != 1.0f) //왼쪽
+        //{
+        //    scale.x = 1.0f;
+        //    transform.localScale = scale;
+        //}
+        //else if (moveDir.x > 0 && scale.x != 1.0f) //오른쪽
+        //{
+        //    scale.x = -1.0f;
+        //    transform.localScale = scale;
+        //}
+       
+        Vector2 mouseWorldPos = camMain.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 playerPos = transform.position;
+        Vector2 fixedPos = mouseWorldPos - playerPos;
+
+        Vector3 playerScale = transform.localScale;
+        if (fixedPos.x > 0 && playerScale.x != -1.0f)
+        {
+            playerScale.x = -1.0f;
+        }
+        else if (fixedPos.x < 0 && playerScale.x != 1.0f)
+        {
+            playerScale.x = 1.0f;
+        }
+        transform.localScale = playerScale;
+    }
+        
 
     private void jump()
     {
