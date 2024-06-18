@@ -13,6 +13,7 @@ public class MoveController : MonoBehaviour
     Vector3 moveDir;
     float verticalVelocity = 0f; //수직으로 떨어지는 힘
 
+
     [SerializeField] float jumpForce;
     [SerializeField] float moveSpeed;
 
@@ -24,15 +25,59 @@ public class MoveController : MonoBehaviour
 
     Camera camMain;
 
+    [Header("벽점프")]
+    [SerializeField] bool touchWall;
+    bool isWallJump;
+    [SerializeField] float wallJumpTime = 0.3f;
+    float wallJumpTimer = 0.0f;// 타이머
+
     private void OnDrawGizmos()
     {
         if (showGroundCheck == true)
         {
             Debug.DrawLine(transform.position, transform.position - new Vector3(0, grondCheckLength), colorGroundCheck);
         }
-         //Debug.DrawRay(); 디버그도 체킁요도로 씬카메라에 선을 그려 줄 수 있음
-         //Gizmos.DrawSphere() 디버그 보다 더많은 시각 효과를 제공
-         //Handles.DrawWireArc
+        //Debug.DrawRay(); 디버그도 체크용도로 씬카메라에 선을 그려 줄 수 있음
+        //Gizmos.DrawSphere() 디버그 보다 더많은 시각 효과를 제공
+        //Handles.DrawWireArc
+    }
+
+    //private void OnTriggerEnter2D(Collider2D collision) //상대방의 콜라이더를 가져옴 , 누가실행시킨지는 모름
+    //{
+    //    if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+    //    {
+    //        touchWall = true;
+    //    }
+    //}
+
+    //private void OnTriggerExit2D(Collider2D collision)
+    //{
+    //    if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+    //    {
+    //        touchWall = false;
+    //    }
+    //}
+
+    public void TriggerEnter(HitBox.ehitboxType _type, Collider2D _collision)
+    {
+        if (_type == HitBox.ehitboxType.WallCheck)
+        {
+            if (_collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+            {
+                touchWall = true;
+            }
+        }
+    }
+
+    public void TriggerExit(HitBox.ehitboxType _type, Collider2D _collision)
+    {
+        if (_type == HitBox.ehitboxType.WallCheck)
+        {
+            if (_collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+            {
+                touchWall = false;
+            }
+        }
     }
 
     private void Awake()
@@ -75,7 +120,7 @@ public class MoveController : MonoBehaviour
 
 
         RaycastHit2D hit =
-        Physics2D.BoxCast(boxColl.bounds.center, boxColl.bounds.size, 0f, Vector2.down , grondCheckLength, LayerMask.GetMask("Ground"));
+        Physics2D.BoxCast(boxColl.bounds.center, boxColl.bounds.size, 0f, Vector2.down, grondCheckLength, LayerMask.GetMask("Ground"));
 
         if (hit)
         {
@@ -90,10 +135,10 @@ public class MoveController : MonoBehaviour
         moveDir.y = rigid.velocity.y;
         //물리에의해 이동
         rigid.velocity = moveDir;
-        
+
     }
 
- 
+
     /// <summary>
     /// transform.localPosition; 부모로부터의 자식 포지션
     ///transform.position; 월드 포지션
@@ -111,7 +156,7 @@ public class MoveController : MonoBehaviour
         //    scale.x = -1.0f;
         //    transform.localScale = scale;
         //}
-       
+
         Vector2 mouseWorldPos = camMain.ScreenToWorldPoint(Input.mousePosition);
         Vector2 playerPos = transform.position;
         Vector2 fixedPos = mouseWorldPos - playerPos;
@@ -127,7 +172,7 @@ public class MoveController : MonoBehaviour
         }
         transform.localScale = playerScale;
     }
-        
+
 
     private void jump()
     {
@@ -136,12 +181,16 @@ public class MoveController : MonoBehaviour
         //    rigid.AddForce(new Vector2(10, jumpForce), ForceMode2D.Impulse);//지긋이 미는 힘
         //}
 
-        if (isGround == false)
+        if (isGround == false) //공중에 떠있는 상태라면 , 벽에 붙어있고 , 벽을향해 플레이어가 방향키를 누르고 있는데 점프키를 누를때
         {
+            if(touchWall == true && moveDir.x != 0 && Input.GetKeyDown(KeyCode.Space))
+            {
+                isWallJump = true;
+            }
             return;
         }
 
-        if(Input.GetKeyDown(KeyCode.Space) == true)
+        if (Input.GetKeyDown(KeyCode.Space) == true)
         {
             isJump = true;
         }
@@ -149,16 +198,27 @@ public class MoveController : MonoBehaviour
 
     private void checkGravity()
     {
-        if(isGround == false)//공중에 떠있을 때
+        if(isWallJump  == true)
+        {
+            isWallJump = false;
+            Vector2 dir = rigid.velocity;
+            dir.x *= -1f; // 반대방향으로 전환
+            rigid.velocity = dir;
+
+            verticalVelocity = jumpForce * 0.5f;
+            //일정시간 유저가 입력할수 없어야 벽을 발로찬 x값을 볼수잇음
+            //입력불가 타이머를 작동시켜야함
+        }
+        else if (isGround == false)//공중에 떠있을 때
         {
             verticalVelocity += Physics.gravity.y * Time.deltaTime; // -9.81
 
-            if(verticalVelocity < -10)
+            if (verticalVelocity < -10)
             {
                 verticalVelocity = -10;
             }
         }
-        else if(isJump == true)
+        else if (isJump == true)
         {
             isJump = false;
             verticalVelocity = jumpForce;
@@ -168,7 +228,7 @@ public class MoveController : MonoBehaviour
             verticalVelocity = 0;
         }
 
-        
+
         rigid.velocity = new Vector2(rigid.velocity.x, verticalVelocity);
     }
 
