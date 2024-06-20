@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-using UnityEditor;
-using System;
+using UnityEngine.UI;
 
 public class MoveController : MonoBehaviour
 {
@@ -36,9 +36,16 @@ public class MoveController : MonoBehaviour
     [SerializeField] private float dashTime = 0.3f;
     [SerializeField] private float dashSpeed = 20f;
     float dashTimer = 0.0f;
-    //대시이펙트
+    TrailRenderer dashEffect;
+    [SerializeField] private float dashCoolTime = 2;
+    float dashCoolTimer = 0.0f;
 
     [SerializeField] KeyCode dashKey;
+
+    [Header("대쉬 ui")]
+    [SerializeField] GameObject objDashCoolTime;
+    [SerializeField] Image imgFill;
+    [SerializeField] TMP_Text TextCoolTime;
 
     private void OnDrawGizmos()
     {
@@ -94,6 +101,9 @@ public class MoveController : MonoBehaviour
         rigid = GetComponent<Rigidbody2D>();
         boxColl = GetComponent<BoxCollider2D>();
         anim = GetComponent<Animator>();
+        dashEffect = GetComponent<TrailRenderer>();
+        dashEffect.enabled = false;
+        initUI(); 
     }
 
     void Start()
@@ -121,10 +131,13 @@ public class MoveController : MonoBehaviour
 
     private void dash()
     {
-        if(dashTimer == 0.0f && (Input.GetKeyDown(KeyCode.LeftShift)|| Input.GetKeyDown(KeyCode.F)))
+        if(dashTimer == 0.0f && dashCoolTimer == 0.0f && 
+            (Input.GetKeyDown(KeyCode.LeftShift)|| Input.GetKeyDown(KeyCode.F)))
         {
             dashTimer = dashTime;
+            dashCoolTimer = dashCoolTime;
             verticalVelocity = 0.0f;
+            dashEffect.enabled = true;
             //if(transform.localScale.x > 0 )//왼쪽
             //{
             //    rigid.velocity = new Vector2(-dashSpeed, verticalVelocity);
@@ -139,6 +152,7 @@ public class MoveController : MonoBehaviour
             rigid.velocity = new Vector2(transform.localScale.x > 0 ? -dashSpeed : dashSpeed, 0);
         }
     }
+
 
     private void checkTimer()
     {
@@ -157,8 +171,30 @@ public class MoveController : MonoBehaviour
             if(dashTimer < 0.0f )
             {
                 dashTimer = 0.0f;
+                dashEffect.enabled = false; // 대쉬가 꺼지면
+                dashEffect.Clear(); // 남아있는 것을 전부 지움
             }
         }
+        if(dashCoolTimer > 0.0f)
+        {
+            if(objDashCoolTime.activeSelf == false)
+            {
+                objDashCoolTime.SetActive(true);
+            }
+
+            dashCoolTimer -= Time.deltaTime;
+            if( dashCoolTimer < 0.0f )
+            {
+                dashCoolTimer = 0.0f;
+                objDashCoolTime.SetActive(false);
+            }
+
+            //dashCoolTime = 2초 , 스킬을 쓰면 0 , 점점 1이 되어가야함
+            //2 타이머 / 2 최대타이머 = 1, 0.5 , 0
+            imgFill.fillAmount = 1 - dashCoolTimer / dashCoolTime;
+            TextCoolTime.text = dashCoolTimer.ToString("F1");
+        }
+
     }
 
     private void checkGrounded()
@@ -300,5 +336,12 @@ public class MoveController : MonoBehaviour
     {
         anim.SetInteger("Horizontal", (int)moveDir.x);
         anim.SetBool("isGround", isGround);
+    }
+
+    private void initUI()
+    {
+        objDashCoolTime.SetActive(false);
+        imgFill.fillAmount = 0;
+        TextCoolTime.text = "";
     }
 }
