@@ -7,7 +7,7 @@ public class ThrowWeapon : MonoBehaviour
     Rigidbody2D rigid;
     Vector2 force;
     bool right;
-    [SerializeField] bool isDone = false;
+    bool isDone = false;
 
 
 
@@ -30,7 +30,7 @@ public class ThrowWeapon : MonoBehaviour
 
     void Update()
     {
-        if (isDone == true) return;
+        if (isDone == false) return;
 
         transform.Rotate(new Vector3(0,0, right == true ? -360f : 360f) * Time.deltaTime);
     }
