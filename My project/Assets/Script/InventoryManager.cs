@@ -8,6 +8,10 @@ public class InventoryManager : MonoBehaviour
 
     [SerializeField] GameObject viewInventory; // 인벤토리뷰
     [SerializeField] GameObject fabItem; // 인벤토리에 생성될 프리팹
+
+    [SerializeField] Transform canvasInventory;
+    public Transform CanvasInventory => canvasInventory;
+
     List<Transform> listTrsInventory = new List<Transform>();
 
 
@@ -28,6 +32,7 @@ public class InventoryManager : MonoBehaviour
     void Start()
     {
         initInventory();
+        getEmptyItemSlot();
     }
 
     private void initInventory()
