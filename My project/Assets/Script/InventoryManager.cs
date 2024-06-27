@@ -32,7 +32,6 @@ public class InventoryManager : MonoBehaviour
     void Start()
     {
         initInventory();
-        getEmptyItemSlot();
     }
 
     private void initInventory()
@@ -78,6 +77,20 @@ public class InventoryManager : MonoBehaviour
             }
         }
        return -1;
+    }
+
+
+    public bool GetItem(string _idx)
+    {
+        int slotNum = getEmptyItemSlot();
+        if (slotNum == -1)
+        {
+            return false;
+        }
+
+        GameObject go = Instantiate(fabItem, listTrsInventory[slotNum]);
+        //오브젝트에게 너는 _idx번호가 너의 정보 데이터야
+        return true;
     }
 
 

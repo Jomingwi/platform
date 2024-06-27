@@ -34,10 +34,6 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler , IEndDragH
 
     }
 
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-       
-    }
 
     public void OnBeginDrag(UnityEngine.EventSystems.PointerEventData eventData)
     {
