@@ -13,14 +13,18 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler , IEndDragH
 
     CanvasGroup canvasGroup; //자식들을 통합 관리하는 컴포먼트
 
+    Image imgItem;
+    
     private void Awake()
     {
-        canvasGroup = GetComponent<CanvasGroup>();    
+        canvasGroup = GetComponent<CanvasGroup>();
+        imgItem = GetComponent<Image>();
     }
 
     void Start()
     {
-        canvas = InventoryManager.Instance.CanvasInventory;   
+        canvas = InventoryManager.Instance.CanvasInventory;
+        
     }
 
     /// <summary>
@@ -30,12 +34,14 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler , IEndDragH
     /// <param name="_idx"> 아이템의 인덱스 넘버</param>
 
     public void SetItem(string _idx)
-    {
-
+    {  
+        string spriteName = JsonManager.instance.GetSpriteNameFromIdx(_idx);
+        imgItem = GetComponent<Image>();
+        imgItem.sprite = SpriteManager.instance.GetSprite(spriteName);
     }
 
 
-    public void OnBeginDrag(UnityEngine.EventSystems.PointerEventData eventData)
+    public void OnBeginDrag(PointerEventData eventData)
     {
         beforeParent = transform.parent;
 
@@ -45,12 +51,12 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler , IEndDragH
         canvasGroup.blocksRaycasts = false;
     }
 
-    public void OnDrag(UnityEngine.EventSystems.PointerEventData eventData)
+    public void OnDrag(PointerEventData eventData)
     {
         transform.position = eventData.position;
     }
 
-    public void OnEndDrag(UnityEngine.EventSystems.PointerEventData eventData)
+    public void OnEndDrag(PointerEventData eventData)
     {
         if(transform.parent == canvas)
         {
@@ -61,6 +67,8 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler , IEndDragH
         canvasGroup.alpha = 1;
         canvasGroup.blocksRaycasts = true;
     }
+
+
 }
 
     
